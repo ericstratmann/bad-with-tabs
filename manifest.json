@@ -1,0 +1,9 @@
+{
+    "name": "Bad With Tabs",
+    "version": "0.1",
+    "manifest_version": 2,
+    "description": "An extension to help people with too-many-tabs syndrome",
+    "permissions": [
+        "tabs"
+    ] 
+}
