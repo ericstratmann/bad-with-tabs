@@ -1,5 +1,5 @@
 (function() {
-  var Browser, Tab, Window;
+  var Browser, Tab, Window, browser;
   Browser = function() {
     this.windows = [];
     return this;
@@ -19,4 +19,19 @@
     this.chromeTab = chromeTab;
     return this;
   };
+  browser = new Browser();
+  chrome.windows.getAll({
+    populate: true
+  }, function(chromeWindows) {
+    return chromeWindows.forEach(function(chromeWindow) {
+      var window;
+      window = new Window(chromeWindow);
+      chromeWindow.tabs.forEach(function(chromeTab) {
+        var tab;
+        tab = new Tab(chromeTab);
+        return window.addTab(tab);
+      });
+      return browser.addWindow(window);
+    });
+  });
 }).call(this);
