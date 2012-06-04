@@ -3,6 +3,9 @@
     "version": "0.1",
     "manifest_version": 2,
     "description": "An extension to help people with too-many-tabs syndrome",
+    "background": {
+        "scripts": ["background.js"]
+    },
     "permissions": [
         "tabs"
     ] 
