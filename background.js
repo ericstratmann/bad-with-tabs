@@ -1,7 +1,11 @@
 (function() {
-  var Browser, Tab, Window, browser, onTabAttached, onTabCreated;
+  var Browser, Tab, Window, browser, onTabAttached, onTabCreated, onTabRemoved, onTabSelected, onWindowCreated;
+  var __bind = function(func, context) {
+    return function(){ return func.apply(context, arguments); };
+  };
   Browser = function() {
     this.windows = [];
+    this.initialize();
     return this;
   };
   Browser.prototype.addWindow = function(window) {
@@ -22,6 +26,22 @@
     });
     return window.getTabById(id);
   };
+  Browser.prototype.initialize = function() {
+    return chrome.windows.getAll({
+      populate: true
+    }, __bind(function(chromeWindows) {
+      return chromeWindows.forEach(__bind(function(chromeWindow) {
+        var window;
+        window = new Window(chromeWindow);
+        chromeWindow.tabs.forEach(__bind(function(chromeTab) {
+          var tab;
+          tab = new Tab(chromeTab);
+          return window.addTab(tab);
+        }, this));
+        return this.addWindow(window);
+      }, this));
+    }, this));
+  };
   Window = function(chromeWindow) {
     this.chromeWindow = chromeWindow;
     this.tabs = [];
@@ -29,19 +49,34 @@
   };
   Window.prototype.addTab = function(tab) {
     this.tabs.push(tab);
-    return tab.setWindow(this);
+    tab.setWindow(this);
+    return this.closeTabIfNecessary();
   };
   Window.prototype.removeTab = function(tab) {
     return this.tabs.remove(this.tabs.indexOf(tab));
+  };
+  Window.prototype.closeTab = function(tab) {
+    return chrome.tabs.remove(tab.chromeTab.id);
   };
   Window.prototype.getTabById = function(id) {
     return this.tabs.findFirst(function(tab) {
       return tab.chromeTab.id === id;
     });
   };
+  Window.prototype.closeTabIfNecessary = function() {
+    var candidate;
+    if (this.tabs.length > 5) {
+      candidate = this.tabs[0];
+      this.tabs.forEach(function(tab) {
+        return tab.lastAccess < candidate.lastAccess ? (candidate = tab) : null;
+      });
+      return this.closeTab(candidate);
+    }
+  };
   Tab = function(chromeTab) {
     this.chromeTab = chromeTab;
     this.window = null;
+    this.updateLastAccess();
     return this;
   };
   Tab.prototype.setWindow = function(window) {
@@ -49,6 +84,9 @@
       this.window.removeTab(this);
     }
     return (this.window = window);
+  };
+  Tab.prototype.updateLastAccess = function() {
+    return (this.lastAccess = new Date().getTime());
   };
   Array.prototype.findFirst = function(f) {
     var ret;
@@ -62,7 +100,7 @@
   };
   Array.prototype.remove = function(i) {
     this[i] = this[this.length - 1];
-    return delete this[this.length - 1];
+    return this.length -= 1;
   };
   onTabCreated = function(chromeTab) {
     var tab, window;
@@ -72,25 +110,29 @@
   };
   onTabAttached = function(tabId, attachInfo) {
     var tab, window;
-    tab = browser.findTabBy(tabId);
-    window = browser.findWindow(attackInfo.newWindowId);
+    tab = browser.getTabById(tabId);
+    window = browser.getWindowById(attachInfo.newWindowId);
     return window.addTab(tab);
+  };
+  onTabRemoved = function(tabId, removeInfo) {
+    var tab;
+    tab = browser.getTabById(tabId);
+    return tab.window.removeTab(tab);
+  };
+  onTabSelected = function(tabId) {
+    var tab;
+    tab = browser.getTabById(tabId);
+    return tab.updateLastAccess();
+  };
+  onWindowCreated = function(chromeWindow) {
+    var window;
+    window = new Window(chromeWindow);
+    return browser.addWindow(window);
   };
   chrome.tabs.onAttached.addListener(onTabAttached);
   chrome.tabs.onCreated.addListener(onTabCreated);
+  chrome.tabs.onSelectionChanged.addListener(onTabSelected);
+  chrome.tabs.onRemoved.addListener(onTabRemoved);
+  chrome.windows.onCreated.addListener(onWindowCreated);
   browser = new Browser();
-  chrome.windows.getAll({
-    populate: true
-  }, function(chromeWindows) {
-    return chromeWindows.forEach(function(chromeWindow) {
-      var window;
-      window = new Window(chromeWindow);
-      chromeWindow.tabs.forEach(function(chromeTab) {
-        var tab;
-        tab = new Tab(chromeTab);
-        return window.addTab(tab);
-      });
-      return browser.addWindow(window);
-    });
-  });
 }).call(this);
