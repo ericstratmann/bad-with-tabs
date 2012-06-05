@@ -2,6 +2,36 @@ class Browser
     constructor: ->
         @windows = []
         @initialize()
+        @addEventHandlers()
+
+    initialize: ->
+        chrome.windows.getAll populate: true, (chromeWindows) =>
+            chromeWindows.forEach (chromeWindow) =>
+                window = new Window chromeWindow
+                chromeWindow.tabs.forEach (chromeTab) =>
+                    tab = new Tab chromeTab
+                    window.addTab tab
+                @addWindow window
+
+    addEventHandlers: ->
+        chrome.windows.onCreated.addListener (chromeWindow) =>
+            @addWindow new Window chromeWindow
+
+        chrome.tabs.onCreated.addListener (chromeTab) =>
+            window = @getWindowById chromeTab.windowId
+            window.addTab new Tab chromeTab
+
+        chrome.tabs.onRemoved.addListener (tabId, removeInfo) =>
+            tab = @getTabById tabId
+            tab.window.removeTab tab
+
+        chrome.tabs.onSelectionChanged.addListener (tabId) =>
+            tab = @getTabById tabId
+            tab.updateLastAccess()
+
+        chrome.tabs.onAttached.addListener (tabId, attachInfo) =>
+            window = @getWindowById attachInfo.newWindowId
+            window.addTab @getTabById tabId
 
     addWindow: (window) ->
         @windows.push window
@@ -18,14 +48,6 @@ class Browser
             window.getTabById id
         window.getTabById id
 
-    initialize: ->
-        chrome.windows.getAll populate: true, (chromeWindows) =>
-            chromeWindows.forEach (chromeWindow) =>
-                window = new Window chromeWindow
-                chromeWindow.tabs.forEach (chromeTab) =>
-                    tab = new Tab chromeTab
-                    window.addTab tab
-                @addWindow window
 
 class Window
     constructor: (chromeWindow) ->
@@ -76,33 +98,5 @@ Array.prototype.findFirst = (f) ->
 Array.prototype.remove = (i) ->
     this[i] = this[this.length - 1]
     this.length -= 1
-
-onTabCreated = (chromeTab) ->
-    window = browser.getWindowById chromeTab.windowId
-    tab = new Tab chromeTab
-    window.addTab tab
-
-onTabAttached = (tabId, attachInfo) ->
-    tab = browser.getTabById tabId
-    window = browser.getWindowById attachInfo.newWindowId
-    window.addTab tab
-
-onTabRemoved = (tabId, removeInfo) ->
-    tab = browser.getTabById tabId
-    tab.window.removeTab tab
-
-onTabSelected = (tabId) ->
-    tab = browser.getTabById tabId
-    tab.updateLastAccess()
-
-onWindowCreated = (chromeWindow) ->
-    window = new Window chromeWindow
-    browser.addWindow window
-
-chrome.tabs.onAttached.addListener onTabAttached
-chrome.tabs.onCreated.addListener onTabCreated
-chrome.tabs.onSelectionChanged.addListener onTabSelected
-chrome.tabs.onRemoved.addListener onTabRemoved
-chrome.windows.onCreated.addListener onWindowCreated
 
 browser = new Browser
