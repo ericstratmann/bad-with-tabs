@@ -4,6 +4,9 @@ class Window
         @id = chromeWindow.id
         @tabs = {}
 
+    setBrowser: (browser) ->
+        @browser = browser
+
     addTab: (tab) ->
         @tabs[tab.id] = tab
         tab.setWindow @
@@ -20,10 +23,5 @@ class Window
             tab.id == id
 
     closeTabIfNecessary: ->
-        keys = Object.keys @tabs
-        if keys.length > 5
-            candidate = @tabs[keys[0]]
-            for own id, tab of @tabs
-                if tab.lastAccess < candidate.lastAccess
-                    candidate = tab
-            @closeTab candidate
+        tab = @browser.policy.tabToClose @tabs
+        @closeTab tab if tab

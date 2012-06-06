@@ -3,15 +3,16 @@ class Browser
         @windows = {}
         @initialize()
         @addEventHandlers()
+        @policy = new Policy()
 
     initialize: ->
         chrome.windows.getAll populate: true, (chromeWindows) =>
             for chromeWindow in chromeWindows
                 window = new Window chromeWindow
+                @addWindow window
                 for chromeTab in chromeWindow.tabs
                     tab = new Tab chromeTab
                     window.addTab tab
-                @addWindow window
 
     addEventHandlers: ->
         chrome.windows.onCreated.addListener (chromeWindow) =>
@@ -35,6 +36,7 @@ class Browser
 
     addWindow: (window) ->
         @windows[window.id] = window
+        window.setBrowser @
 
     removeWindow: (window) ->
         @windows.remove @windows.indexOf window

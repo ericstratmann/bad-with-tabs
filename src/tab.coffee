@@ -11,4 +11,3 @@ class Tab
 
     updateLastAccess: ->
         @lastAccess = new Date().getTime()
-
