@@ -1,27 +1,29 @@
 class Window
     constructor: (chromeWindow) ->
         @chromeWindow = chromeWindow
-        @tabs = []
+        @id = chromeWindow.id
+        @tabs = {}
 
     addTab: (tab) ->
-        @tabs.push tab
+        @tabs[tab.id] = tab
         tab.setWindow @
         @closeTabIfNecessary()
 
     removeTab: (tab) ->
-        @tabs.remove @tabs.indexOf tab
+        delete @tabs[tab.id]
 
     closeTab: (tab) ->
-        chrome.tabs.remove tab.chromeTab.id
+        chrome.tabs.remove tab.id
 
     getTabById: (id) ->
-        @tabs.findFirst (tab) ->
-            tab.chromeTab.id == id
+        @tabs.find (tab) ->
+            tab.id == id
 
     closeTabIfNecessary: ->
-        if @tabs.length > 5
-            candidate = @tabs[0]
-            @tabs.forEach (tab) ->
+        keys = Object.keys @tabs
+        if keys.length > 5
+            candidate = @tabs[keys[0]]
+            for own id, tab of @tabs
                 if tab.lastAccess < candidate.lastAccess
                     candidate = tab
             @closeTab candidate

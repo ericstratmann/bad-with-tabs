@@ -1,6 +1,7 @@
 class Tab
     constructor: (chromeTab) ->
         @chromeTab = chromeTab
+        @id = chromeTab.id
         @window = null
         @updateLastAccess()
 

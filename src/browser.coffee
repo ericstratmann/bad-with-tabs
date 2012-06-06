@@ -1,14 +1,14 @@
 class Browser
     constructor: ->
-        @windows = []
+        @windows = {}
         @initialize()
         @addEventHandlers()
 
     initialize: ->
         chrome.windows.getAll populate: true, (chromeWindows) =>
-            chromeWindows.forEach (chromeWindow) =>
+            for chromeWindow in chromeWindows
                 window = new Window chromeWindow
-                chromeWindow.tabs.forEach (chromeTab) =>
+                for chromeTab in chromeWindow.tabs
                     tab = new Tab chromeTab
                     window.addTab tab
                 @addWindow window
@@ -34,17 +34,17 @@ class Browser
             window.addTab @getTabById tabId
 
     addWindow: (window) ->
-        @windows.push window
+        @windows[window.id] = window
 
     removeWindow: (window) ->
         @windows.remove @windows.indexOf window
 
     getWindowById: (id) ->
-        @windows.findFirst (window) ->
-            window.chromeWindow.id == id
+        @windows.find (window) ->
+            window.id == id
 
     getTabById: (id) ->
-        window = @windows.findFirst (window) ->
+        window = @windows.find (window) ->
             window.getTabById id
         window.getTabById id
 
