@@ -16,14 +16,16 @@
 
   Policy = (function() {
 
+    Policy.prototype.DEFAULT_MAX_TABS_PER_WINDOW = 5;
+
     function Policy() {
-      this.maxTabs = 5;
+      this.readPolicyFromLocal();
     }
 
     Policy.prototype.tabToClose = function(tabs) {
       var candidate, id, keys, tab;
       keys = Object.keys(tabs);
-      if (keys.length > this.maxTabs) {
+      if (keys.length > this.maxTabsPerWindow) {
         candidate = tabs[keys[0]];
         for (id in tabs) {
           if (!__hasProp.call(tabs, id)) continue;
@@ -34,6 +36,25 @@
         }
       }
       return candidate;
+    };
+
+    Policy.prototype.readPolicyFromLocal = function() {
+      var jsonPolicy, policy;
+      jsonPolicy = localStorage["policy"];
+      if (policy) {
+        policy = JSON.parse(jsonPolicy);
+      } else {
+        policy = this.initializePolicy();
+      }
+      return this.maxTabsPerWindow = policy["maxTabsPerWindow"];
+    };
+
+    Policy.prototype.initializePolicy = function() {
+      var policy;
+      policy = {};
+      policy["maxTabsPerWindow"] = this.DEFAULT_MAX_TABS_PER_WINDOW;
+      localStorage["policy"] = JSON.stringify(policy);
+      return policy;
     };
 
     return Policy;

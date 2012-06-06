@@ -1,0 +1,12 @@
+!!!5
+%html
+    %head
+        %title Bad With Tabs Options
+        %script{:src => "jquery-1.7.2.min.js"}
+        %script{:src => "options.js"}
+    %body
+        %form#options_form
+            %label{:for => "max_tabs_per_window"}
+                Maximum tabs per window
+            %input#max_tabs_per_window{:type => :text}
+            %input{:type => :submit, :value => "Save"}

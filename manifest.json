@@ -8,6 +8,7 @@
             "out/background.js"
         ]
     },
+    "options_page": "out/options.html",
     "permissions": [
         "tabs"
     ] 
