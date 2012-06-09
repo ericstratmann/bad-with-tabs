@@ -50,4 +50,4 @@ class Browser
             window.getTabById id
         window.getTabById id
 
-browser = new Browser
+new Browser if chrome && chrome.tabs
